@@ -1,0 +1,66 @@
+{% extends "core/base.html" %}
+{% block title %}{{ title }} · CampusHub{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between gap-3 mb-4 reveal">
+  <div><div class="eyebrow text-primary">Administration</div><h2 class="section-title mb-1"><i class="bi {{ icon }} me-2"></i>{{ title }}</h2><p class="muted mb-0">{{ subtitle }}</p></div>
+  {% if back_args %}<a href="{% url back_url back_args.0 %}" class="btn btn-light rounded-pill px-3"><i class="bi bi-arrow-left me-1"></i>Back</a>{% else %}<a href="{% url back_url %}" class="btn btn-light rounded-pill px-3"><i class="bi bi-arrow-left me-1"></i>Back</a>{% endif %}
+</div>
+
+<form method="post" enctype="multipart/form-data" class="reveal delay-1">
+{% csrf_token %}
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card-modern p-4 mb-4">
+      <h5 class="section-title mb-1">Basic information</h5><p class="muted small mb-4">Fill in the details below. Fields marked with * are required.</p>
+      <div class="row g-3">
+      {% for field in form %}
+        {% if field.name != 'photo' and field.name != 'cover_image' and field.name != 'description' and field.name != 'address' and field.name != 'password' %}
+        <div class="col-md-6">
+          <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+          {{ field }}
+          {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+          {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+        </div>
+        {% endif %}
+      {% endfor %}
+      </div>
+    </div>
+
+    {% if 'password' in form.fields %}
+    <div class="card-modern p-4 mb-4">
+      <h5 class="section-title mb-1">Login security</h5><p class="muted small mb-3">The username lets the person sign in. Leave password blank while editing to keep the current password.</p>
+      <label class="form-label fw-semibold" for="{{ form.password.id_for_label }}">Password{% if form.password.field.required %} *{% endif %}</label>
+      {{ form.password }}
+      {% for error in form.password.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+    </div>
+    {% endif %}
+
+    {% if 'description' in form.fields or 'address' in form.fields %}
+    <div class="card-modern p-4 mb-4">
+      <h5 class="section-title mb-3">Additional details</h5>
+      {% if 'description' in form.fields %}<label class="form-label fw-semibold">{{ form.description.label }}</label>{{ form.description }}{% for error in form.description.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}{% endif %}
+      {% if 'address' in form.fields %}<label class="form-label fw-semibold mt-3">{{ form.address.label }}</label>{{ form.address }}{% for error in form.address.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}{% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-4">
+    {% if 'photo' in form.fields %}
+    <div class="card-modern p-4 mb-4">
+      <h5 class="section-title mb-1">Profile photo</h5><p class="muted small">JPG, PNG or WebP · max 5 MB · minimum 200×200.</p>
+      <div class="upload-zone mb-3" id="managePhotoZone"><div id="managePreviewWrap">{% if object.photo %}<img id="managePreview" src="{{ object.photo.url }}" class="profile-img-lg mx-auto mb-3" alt="Photo">{% else %}<div id="managePreview" class="profile-img-lg avatar-lg avatar-fallback mx-auto mb-3"><i class="bi bi-camera fs-1"></i></div>{% endif %}</div><label for="{{ form.photo.id_for_label }}" class="btn btn-outline-primary rounded-pill px-4"><i class="bi bi-upload me-1"></i>Choose photo</label>{{ form.photo }}<div class="small muted mt-2">You can also drag & drop here.</div></div>
+      {% for error in form.photo.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+    {% endif %}
+    {% if 'cover_image' in form.fields %}
+    <div class="card-modern p-4 mb-4">
+      <h5 class="section-title mb-1">Course cover</h5><p class="muted small">Use a clean 16:9 image for the best result.</p>
+      <div class="upload-zone mb-3" id="manageCoverZone"><div id="manageCoverWrap">{% if object.cover_image %}<img id="manageCover" src="{{ object.cover_image.url }}" class="course-cover mb-3" style="height:150px" alt="Cover">{% else %}<div id="manageCover" class="course-cover mb-3 d-flex align-items-center justify-content-center"><i class="bi bi-image fs-1 text-primary opacity-50"></i></div>{% endif %}</div><label for="{{ form.cover_image.id_for_label }}" class="btn btn-outline-primary rounded-pill px-4"><i class="bi bi-image me-1"></i>Choose cover</label>{{ form.cover_image }}</div>
+      {% for error in form.cover_image.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+    {% endif %}
+    <div class="card-modern p-4 sticky-lg-top" style="top:95px"><div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-shield-check text-success"></i><strong>Ready to save?</strong></div><p class="muted small">Review the information once, then save. You can edit it anytime later.</p><button class="btn btn-gradient w-100 rounded-pill py-2" type="submit"><i class="bi bi-check2-circle me-1"></i>{{ title }}</button></div>
+  </div>
+</div>
+</form>
+{% endblock %}

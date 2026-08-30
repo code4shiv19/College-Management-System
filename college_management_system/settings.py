@@ -38,8 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
-    'clidinary_storage',
-    'cloudinary'
+    'cloudinary_storage', # cloudinary storage - for media files
+    'cloudinary' #cloudinary app - for media files
 ]
 
 MIDDLEWARE = [
@@ -138,3 +138,17 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
+
+cloudinary.config (
+    cloud_name = 'wyypwl5n',
+    api_key = '629757466543687' ,
+    api_secret = 'gfFZZ2IXIsRHbOu1q2IrV9ycOuU',
+
+)
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'

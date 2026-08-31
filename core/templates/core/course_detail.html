@@ -32,8 +32,8 @@
     <div class="course-code">{{ course.code }}</div>
     <h1 class="section-title mt-2">{{ course.name }}</h1>
     <p class="muted">
-      {{ course.department }} · Semester {{ course.semester }} · {{
-      course.credits }} credits
+      {{ course.department }} · Semester {{ course.semester }} ·
+      {{ course.credits }} credits
     </p>
     <p>{{ course.description|default:'No description provided.' }}</p>
 
@@ -58,6 +58,7 @@
           <th>Grade</th>
         </tr>
       </thead>
+
       <tbody>
         {% for e in enrollments %}
         <tr>
@@ -68,16 +69,30 @@
               href="{% url 'core:student_detail' e.student.pk %}"
             >
               {% if e.student.photo %}
-              <img src="{{ e.student.photo.url }}" class="profile-img" alt="" />
+              <img
+                src="{{ e.student.photo.url }}"
+                class="profile-img"
+                alt=""
+              />
               {% else %}
-              <span class="profile-img avatar-fallback"
-                >{{ e.student.user.first_name|first|upper }}</span
-              >
+              <span class="profile-img avatar-fallback">
+                {% if e.student.user.first_name %}
+                  {{ e.student.user.first_name|first|upper }}
+                {% else %}
+                  {{ e.student.user.username|first|upper }}
+                {% endif %}
+              </span>
               {% endif %}
-              <span class="fw-bold"
-                >{{ e.student.user.get_full_name|default:e.student.user.username
-                }}</span
-              >
+
+              <!-- Student Name -->
+              <span class="fw-bold">
+                {% if e.student.user.first_name or e.student.user.last_name %}
+                  {{ e.student.user.first_name }}
+                  {{ e.student.user.last_name }}
+                {% else %}
+                  {{ e.student.user.username }}
+                {% endif %}
+              </span>
             </a>
           </td>
 

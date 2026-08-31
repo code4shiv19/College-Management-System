@@ -1,9 +1,219 @@
-{% extends "core/base.html" %}
-{% block title %}Dashboard · CampusHub{% endblock %}
-{% block content %}
-<div class="hero mb-4 reveal"><div class="row align-items-center"><div class="col-lg-8"><div class="eyebrow mb-2">{% if user.is_staff %}Administration{% elif role == 'faculty' %}Faculty workspace{% else %}Student workspace{% endif %}</div><h1 class="mb-3">Good to see you, {{ user.first_name|default:user.username }}.</h1><p class="mb-0 opacity-75 fs-6">Everything you need to manage your college experience, from people to courses, in one place.</p></div><div class="col-lg-4 text-lg-end mt-4 mt-lg-0">{% if user.is_staff %}<a href="{% url 'core:student_add' %}" class="btn btn-light rounded-pill px-4 me-1"><i class="bi bi-plus-lg me-1"></i>Add student</a><a href="{% url 'core:course_add' %}" class="btn btn-outline-light rounded-pill px-4">Add course</a>{% else %}<a href="{% url 'core:profile' %}" class="btn btn-light rounded-pill px-4"><i class="bi bi-camera me-1"></i>Update profile</a>{% endif %}</div></div></div>
-<div class="row g-3 mb-4"><div class="col-6 col-xl-3"><div class="card-modern stat-card reveal delay-1"><div class="stat-icon mb-3"><i class="bi bi-people-fill"></i></div><div class="stat-number">{{ student_count }}</div><div class="stat-label">Students</div></div></div><div class="col-6 col-xl-3"><div class="card-modern stat-card reveal delay-2"><div class="stat-icon mb-3"><i class="bi bi-person-badge-fill"></i></div><div class="stat-number">{{ faculty_count }}</div><div class="stat-label">Faculty</div></div></div><div class="col-6 col-xl-3"><div class="card-modern stat-card reveal delay-3"><div class="stat-icon mb-3"><i class="bi bi-journal-bookmark-fill"></i></div><div class="stat-number">{{ course_count }}</div><div class="stat-label">Courses</div></div></div><div class="col-6 col-xl-3"><div class="card-modern stat-card reveal delay-4"><div class="stat-icon mb-3"><i class="bi bi-building-fill"></i></div><div class="stat-number">{{ department_count }}</div><div class="stat-label">Departments</div></div></div></div>
-<div class="row g-4"><div class="col-lg-6"><div class="card-modern p-4 h-100"><div class="d-flex justify-content-between align-items-center mb-3"><div><div class="eyebrow text-primary">Directory</div><h5 class="section-title mb-0">Recent students</h5></div><a href="{% url 'core:student_list' %}" class="btn btn-sm btn-light rounded-pill">View all <i class="bi bi-arrow-right"></i></a></div>{% for s in recent_students %}<a class="person-cell py-2" href="{% url 'core:student_detail' s.pk %}">{% if s.photo %}<img src="{{ s.photo.url }}" class="profile-img" alt="{{ s.user.get_full_name }}" data-fallback="studentFallback{{ s.pk }}"><span id="studentFallback{{ s.pk }}" class="profile-img avatar-fallback d-none">{{ s.user.first_name|first|upper }}</span>{% else %}<span class="profile-img avatar-fallback">{{ s.user.first_name|first|upper }}</span>{% endif %}<div><div class="fw-bold">{{ s.user.get_full_name|default:s.user.username }}</div><small class="muted">{{ s.roll_number }} · {{ s.department|default:'No department' }}</small></div><i class="bi bi-chevron-right ms-auto muted"></i></a>{% empty %}<div class="empty-state muted">No students yet.</div>{% endfor %}</div></div>
-<div class="col-lg-6"><div class="card-modern p-4 h-100"><div class="d-flex justify-content-between align-items-center mb-3"><div><div class="eyebrow text-primary">Academics</div><h5 class="section-title mb-0">Featured courses</h5></div><a href="{% url 'core:course_list' %}" class="btn btn-sm btn-light rounded-pill">View all <i class="bi bi-arrow-right"></i></a></div><div class="row g-3">{% for c in featured_courses %}<div class="col-12"><a href="{% url 'core:course_detail' c.pk %}" class="quick-link d-flex align-items-center gap-3">{% if c.cover_image %}<img src="{{ c.cover_image.url }}" style="width:64px;height:48px;object-fit:cover;border-radius:12px" alt="{{ c.name }}">{% else %}<span class="stat-icon" style="width:48px;height:48px"><i class="bi bi-journal-richtext"></i></span>{% endif %}<div class="flex-grow-1"><span class="course-code">{{ c.code }}</span><div class="fw-bold">{{ c.name }}</div><small class="muted">{{ c.department }} · Semester {{ c.semester }}</small></div><i class="bi bi-arrow-up-right muted"></i></a></div>{% empty %}<div class="muted">No courses yet.</div>{% endfor %}</div></div></div></div>
-{% if user.is_staff %}<div class="card-modern p-4 mt-4 reveal"><div class="row align-items-center"><div class="col"><div class="eyebrow text-primary">Quick actions</div><h5 class="section-title mb-1">Manage your campus</h5><p class="muted mb-0">Add or update people and courses without opening the advanced admin.</p></div><div class="col-auto d-flex flex-wrap gap-2 mt-3 mt-md-0"><a href="{% url 'core:student_add' %}" class="btn btn-gradient rounded-pill"><i class="bi bi-person-plus me-1"></i>Student</a><a href="{% url 'core:faculty_add' %}" class="btn btn-light rounded-pill"><i class="bi bi-person-badge me-1"></i>Faculty</a><a href="{% url 'core:course_add' %}" class="btn btn-light rounded-pill"><i class="bi bi-journal-plus me-1"></i>Course</a></div></div></div>{% endif %}
-{% endblock %}
+{% extends "core/base.html" %} {% block title %}Dashboard · CampusHub{%endblock%} {% block content %}
+
+<div class="hero mb-4 reveal">
+  <div class="row align-items-center">
+    <div class="col-lg-8">
+      <div class="eyebrow mb-2">
+        {% if user.is_staff %} Administration {% elif role == 'faculty' %}
+        Faculty workspace {% else %} Student workspace {% endif %}
+      </div>
+      <h1 class="mb-3">
+        Good to see you, {{ user.first_name|default:user.username }}.
+      </h1>
+      <p class="mb-0 opacity-75 fs-6">
+        Everything you need to manage your college experience, from people to
+        courses, in one place.
+      </p>
+    </div>
+
+    <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
+      {% if user.is_staff %}
+      <a
+        href="{% url 'core:student_add' %}"
+        class="btn btn-light rounded-pill px-4 me-1"
+      >
+        <i class="bi bi-plus-lg me-1"></i>Add student
+      </a>
+      <a
+        href="{% url 'core:course_add' %}"
+        class="btn btn-outline-light rounded-pill px-4"
+        >Add course</a
+      >
+      {% else %}
+      <a
+        href="{% url 'core:profile' %}"
+        class="btn btn-light rounded-pill px-4"
+      >
+        <i class="bi bi-camera me-1"></i>Update profile
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-3">
+    <div class="card-modern stat-card reveal delay-1">
+      <div class="stat-icon mb-3"><i class="bi bi-people-fill"></i></div>
+      <div class="stat-number">{{ student_count }}</div>
+      <div class="stat-label">Students</div>
+    </div>
+  </div>
+
+  <div class="col-6 col-xl-3">
+    <div class="card-modern stat-card reveal delay-2">
+      <div class="stat-icon mb-3"><i class="bi bi-person-badge-fill"></i></div>
+      <div class="stat-number">{{ faculty_count }}</div>
+      <div class="stat-label">Faculty</div>
+    </div>
+  </div>
+
+  <div class="col-6 col-xl-3">
+    <div class="card-modern stat-card reveal delay-3">
+      <div class="stat-icon mb-3">
+        <i class="bi bi-journal-bookmark-fill"></i>
+      </div>
+      <div class="stat-number">{{ course_count }}</div>
+      <div class="stat-label">Courses</div>
+    </div>
+  </div>
+
+  <div class="col-6 col-xl-3">
+    <div class="card-modern stat-card reveal delay-4">
+      <div class="stat-icon mb-3"><i class="bi bi-building-fill"></i></div>
+      <div class="stat-number">{{ department_count }}</div>
+      <div class="stat-label">Departments</div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Content Row -->
+<div class="row g-4">
+  <!-- Recent Students Section -->
+  <div class="col-lg-6">
+    <div class="card-modern p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <div class="eyebrow text-primary">Directory</div>
+          <h5 class="section-title mb-0">Recent students</h5>
+        </div>
+        <a
+          href="{% url 'core:student_list' %}"
+          class="btn btn-sm btn-light rounded-pill"
+        >
+          View all <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+
+      {% for s in recent_students %}
+      <a class="person-cell py-2" href="{% url 'core:student_detail' s.pk %}">
+        {% if s.photo %}
+        <img
+          src="{{ s.photo.url }}"
+          class="profile-img"
+          alt="{{ s.user.get_full_name }}"
+          data-fallback="studentFallback{{ s.pk }}"
+        />
+        <span
+          id="studentFallback{{ s.pk }}"
+          class="profile-img avatar-fallback d-none"
+          >{{ s.user.first_name|first|upper }}</span
+        >
+        {% else %}
+        <span class="profile-img avatar-fallback"
+          >{{ s.user.first_name|first|upper }}</span
+        >
+        {% endif %}
+        <div>
+          <div class="fw-bold">
+            {{ s.user.get_full_name|default:s.user.username }}
+          </div>
+          <small class="muted"
+            >{{ s.roll_number }} · {{ s.department|default:'No department'
+            }}</small
+          >
+        </div>
+        <i class="bi bi-chevron-right ms-auto muted"></i>
+      </a>
+      {% empty %}
+      <div class="empty-state muted">No students yet.</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Featured Courses Section -->
+  <div class="col-lg-6">
+    <div class="card-modern p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <div class="eyebrow text-primary">Academics</div>
+          <h5 class="section-title mb-0">Featured courses</h5>
+        </div>
+        <a
+          href="{% url 'core:course_list' %}"
+          class="btn btn-sm btn-light rounded-pill"
+        >
+          View all <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+
+      <div class="row g-3">
+        {% for c in featured_courses %}
+        <div class="col-12">
+          <a
+            href="{% url 'core:course_detail' c.pk %}"
+            class="quick-link d-flex align-items-center gap-3"
+          >
+            {% if c.cover_image %}
+            <img
+              src="{{ c.cover_image.url }}"
+              style="
+                width: 64px;
+                height: 48px;
+                object-fit: cover;
+                border-radius: 12px;
+              "
+              alt="{{ c.name }}"
+            />
+            {% else %}
+            <span class="stat-icon" style="width: 48px; height: 48px">
+              <i class="bi bi-journal-richtext"></i>
+            </span>
+            {% endif %}
+            <div class="flex-grow-1">
+              <span class="course-code">{{ c.code }}</span>
+              <div class="fw-bold">{{ c.name }}</div>
+              <small class="muted"
+                >{{ c.department }} · Semester {{ c.semester }}</small
+              >
+            </div>
+            <i class="bi bi-arrow-up-right muted"></i>
+          </a>
+        </div>
+        {% empty %}
+        <div class="muted">No courses yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Quick Actions -->
+{% if user.is_staff %}
+<div class="card-modern p-4 mt-4 reveal">
+  <div class="row align-items-center">
+    <div class="col">
+      <div class="eyebrow text-primary">Quick actions</div>
+      <h5 class="section-title mb-1">Manage your campus</h5>
+      <p class="muted mb-0">
+        Add or update people and courses without opening the advanced admin.
+      </p>
+    </div>
+    <div class="col-auto d-flex flex-wrap gap-2 mt-3 mt-md-0">
+      <a
+        href="{% url 'core:student_add' %}"
+        class="btn btn-gradient rounded-pill"
+      >
+        <i class="bi bi-person-plus me-1"></i>Student
+      </a>
+      <a href="{% url 'core:faculty_add' %}" class="btn btn-light rounded-pill">
+        <i class="bi bi-person-badge me-1"></i>Faculty
+      </a>
+      <a href="{% url 'core:course_add' %}" class="btn btn-light rounded-pill">
+        <i class="bi bi-journal-plus me-1"></i>Course
+      </a>
+    </div>
+  </div>
+</div>
+{% endif %} {% endblock %}
